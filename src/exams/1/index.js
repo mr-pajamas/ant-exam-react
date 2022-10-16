@@ -1,7 +1,7 @@
 /**
  * 第一题
  */
-import React from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import './style.scss';
 
 /**
@@ -18,16 +18,57 @@ const cardDataList = [
   },
 ];
 
+const sleep = (millis) => new Promise((resolve) => setTimeout(resolve, millis));
+
 /**
  * 卡片组件
  */
-const Card = (props) => {
+const Card = ({ data }) => {
   // -------- 在这里完成代码 --------
-  const { data } = props;
+  const [countDown, setCountDown] = useState(10);
+  const [doneIds, setDoneIds] = useState([]);
+  const [doingIds, setDoingIds] = useState([]);
+
+  const btnText = useMemo(() => {
+    if (countDown) return `${countDown}s`;
+    if (doingIds.includes(data.title)) return '...';
+    if (doneIds.includes(data.title)) return '已抢购';
+    return '抢购';
+  }, [data, countDown, doingIds, doneIds]);
+
+  const sendRequest = useCallback(async ({ title }) => {
+    setDoingIds((ids) => ids.concat(title));
+    try {
+      await sleep(1000);
+      setDoneIds((ids) => ids.concat(title));
+    } finally {
+      setDoingIds((ids) => {
+        const nids = [...ids];
+        nids.splice(nids.indexOf(title), 1);
+        return nids;
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    const tid = countDown && setTimeout(() => {
+      setCountDown((pc) => pc - 1);
+    }, 1000);
+
+    return () => tid && clearTimeout(tid);
+  }, [countDown]);
+
   return (
     <div className="card">
-      <div>{data.title}</div>
-      <div>待实现</div>
+      <div className="card-body">
+        <div className="card-title">{data.title}</div>
+        <div className="card-subtitle">{data.subTitle}</div>
+      </div>
+      <button
+        className={['card-btn', ...(doingIds.includes(data.title) ? ['loading'] : [])].join(' ')}
+        disabled={!!countDown || doingIds.includes(data.title) || doneIds.includes(data.title)}
+        onClick={() => sendRequest(data)}
+      >{btnText}</button>
     </div>
   );
 };

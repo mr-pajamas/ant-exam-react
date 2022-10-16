@@ -21,11 +21,32 @@ const requestProfile = (uid) => {
   });
 };
 
+const _wrapper = (max = 2) => {
+  const profiles = Object.create(null);
+  const promises = Object.create(null);
+
+  const recurring = (uid) => {
+    if (profiles[uid]) return Promise.resolve(profiles[uid]);
+    if (promises[uid]) return promises[uid];
+    if (Object.keys(promises).length < max) {
+      const promise = requestProfile(uid).then((p) => {
+        profiles[uid] = p;
+        return p;
+      }).finally(() => {
+        delete promises[uid];
+      });
+      promises[uid] = promise;
+      return promise;
+    }
+    return Promise.race(Object.values(promises)).catch(() => {}).then(() => recurring(uid));
+  }
+
+  return recurring;
+};
+
 // 在这里完成代码，进行requestUserProfile优化
 // 在这里调用requestProfile
-const requestUserProfile = (uid = '1', max = 2)=> {
-
-}
+const requestUserProfile = _wrapper(2);
 
 /**
  * 以下为测试用例，无需修改

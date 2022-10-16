@@ -24,10 +24,24 @@ const requestUserInfo = () => {
   });
 };
 
+const _wrapper = () => {
+  let info;
+  let fetchingPromises;
+  return () => {
+    if (info) return Promise.resolve(info);
+    if (!fetchingPromises) {
+      fetchingPromises = requestUserInfo().then((r) => {
+        info = r;
+        return info;
+      });
+    }
+    return fetchingPromises;
+  };
+};
+
 // -------- 在这里完成代码 优化getUserInfo --------
 // 调用 requestUserInfo，并优化请求次数
-const getUserInfo = () => {
-}
+const getUserInfo = _wrapper();
 
 /**
  * 以下为测试用例，无需修改
