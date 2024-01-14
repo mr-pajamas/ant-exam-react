@@ -25,14 +25,11 @@ const requestUserInfo = () => {
 };
 
 const _wrapper = () => {
-  let info;
   let fetchingPromises;
   return () => {
-    if (info) return Promise.resolve(info);
     if (!fetchingPromises) {
-      fetchingPromises = requestUserInfo().then((r) => {
-        info = r;
-        return info;
+      fetchingPromises = requestUserInfo().catch((e) => {
+        fetchingPromises = null;
       });
     }
     return fetchingPromises;
